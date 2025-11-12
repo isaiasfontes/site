@@ -1,17 +1,14 @@
-version: "3.8"
 services:
   site:
     build:
       context: .
-      # passa branch e repo por args (opcional)
       args:
         - GIT_REPO=git@github.com:isaiasfontes/site.git
         - GIT_BRANCH=main
-      # habilita uso de SSH agent (requer BuildKit)
       ssh: ["default"]
     image: ifconnect/site:latest
     restart: unless-stopped
+    # ⚠️ Se o EasyPanel já faz proxy, remova a linha abaixo
+    # ou altere a porta para evitar conflito
     ports:
-      - "80:80"
-    # volumes: # use se quiser montar local para desenvolvimento
-    #   - ./site:/usr/share/nginx/html:ro
+      - "8081:80"
