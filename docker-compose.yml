@@ -3,8 +3,7 @@ services:
     build:
       context: .
       args:
-        - GIT_REPO=git@github.com:isaiasfontes/site.git
+        - GIT_REPO=https://github.com/isaiasfontes/site.git
         - GIT_BRANCH=main
-      ssh: ["default"]
     image: ifconnect/site:latest
     restart: unless-stopped
