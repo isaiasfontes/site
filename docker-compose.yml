@@ -8,7 +8,3 @@ services:
       ssh: ["default"]
     image: ifconnect/site:latest
     restart: unless-stopped
-    # ⚠️ Se o EasyPanel já faz proxy, remova a linha abaixo
-    # ou altere a porta para evitar conflito
-    ports:
-      - "8081:80"
