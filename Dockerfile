@@ -1,36 +1,40 @@
- # syntax=docker/dockerfile:1.4
-#####################################
-# Build stage: clone repo and prepare static site
-#####################################
-FROM alpine/git AS gitclone
-ARG GIT_REPO=git@github.com:isaiasfontes/site.git
-ARG GIT_BRANCH=main
-# allow use of ssh agent via BuildKit (--ssh)
-# clone shallow
-RUN apk add --no-cache openssh && \
-    mkdir /src
-# clone using SSH agent forwarded
-# note: requires BuildKit + --ssh
-RUN --mount=type=ssh git clone --depth 1 --branch ${GIT_BRANCH} ${GIT_REPO} /src || \
-    (echo "git clone failed" && exit 1)
+# ===============================
+# Build: clona o site e prepara arquivos
+# ===============================
+FROM alpine:3.20 AS builder
 
-#####################################
-# Final stage: nginx serve static files
-#####################################
+# Instala git e wget
+RUN apk add --no-cache git
+
+# Define repositório e branch
+ARG GIT_REPO=https://github.com/isaiasfontes/site.git
+ARG GIT_BRANCH=main
+
+# Cria diretório de trabalho
+WORKDIR /app
+
+# Clona o repositório (shallow clone para mais velocidade)
+RUN git clone --depth 1 --branch ${GIT_BRANCH} ${GIT_REPO} .
+
+# ===============================
+# Final: servidor Nginx estático
+# ===============================
 FROM nginx:stable-alpine
 
-# Remove default nginx content
+# Remove página padrão
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy custom nginx conf
+# Copia os arquivos do site
+COPY --from=builder /app /usr/share/nginx/html
+
+# Copia configuração customizada do Nginx (opcional)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy site
-COPY --from=gitclone /src /usr/share/nginx/html
-
-# Ensure ownership
+# Define permissões
 RUN chown -R nginx:nginx /usr/share/nginx/html
 
+# Expõe porta padrão (apenas interna — o EasyPanel faz o proxy)
 EXPOSE 80
 
+# Comando final
 CMD ["nginx", "-g", "daemon off;"]
